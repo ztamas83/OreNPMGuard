@@ -12,7 +12,7 @@ A security tool to detect compromised npm packages from the Shai-Hulud supply ch
 ### Original Shai-Hulud (September 2025)
 The original attack infected **200+ npm packages** (as tracked in this tool) with multiple versions affected per package.
 
-### Shai-Hulud 2.0 (November 2025) - NEW
+### Shai-Hulud 2.0 (November 2025)
 A new variant emerged in November 2025 with significant changes:
 - **738+ compromised packages** with **1,291 unique package@version combinations**
 - **25,000+ affected repositories** across **~350 unique users**
@@ -24,6 +24,10 @@ A new variant emerged in November 2025 with significant changes:
 - Packages uploaded between **November 21-23, 2025**
 
 **Reference**: [Wiz Research - Shai-Hulud 2.0 Blog Post](https://www.wiz.io/blog/shai-hulud-2-0-ongoing-supply-chain-attack)
+
+### Shai-Hulud 2.0 (December 2025)
+Updated affected package list and detection capabilities:
+- **996+ compromised packages** with **1,647 unique package@version combinations**
 
 ### 🦠 How the Attack Works
 
