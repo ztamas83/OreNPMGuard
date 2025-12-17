@@ -375,17 +375,27 @@ function scanForIocs(directory) {
 }
 
 /**
- * Scan a package.json or package-lock.json file for affected packages
+ * Scan a package.json, package-lock.json or pnpm-lock.yaml file for affected packages
  */
-async function scanPackageJson(filePath) {
+async function scanPackage(filePath) {
     try {
-        const packageData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      let packageData;
+      if (filePath.endsWith(".yaml")) {
+        packageData = yaml.load(fs.readFileSync(filePath, "utf8"));
+      } else {
+        packageData = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      }
+
         const affectedDb = await loadAffectedPackagesFromYaml();
 
         // Determine file type and scan accordingly
-        if (filePath.endsWith('package-lock.json')) {
-            return scanPackageLockDependencies(packageData, affectedDb);
-        } else {
+      if (filePath.endsWith("package-lock.json")) {
+        return scanPackageNpmLockDependencies(packageData, affectedDb);
+      } 
+      else if (filePath.endsWith("pnpm-lock.yaml")) {
+        return scanPackagePnpmLockDependencies(packageData, affectedDb);
+      }
+      else {
             return scanPackageJsonDependencies(packageData, affectedDb);
         }
     } catch (error) {
@@ -443,7 +453,7 @@ function scanPackageJsonDependencies(packageData, affectedDb) {
 /**
  * Scan package-lock.json dependencies (includes nested dependencies)
  */
-function scanPackageLockDependencies(packageData, affectedDb) {
+function scanPackageNpmLockDependencies(packageData, affectedDb) {
     const foundPackages = [];
     const potentialMatches = [];
 
@@ -592,8 +602,12 @@ async function scanDirectory(directory) {
             } else if (entry.isFile()) {
                 if (entry.name === 'package.json') {
                     filesToScan.push({ name: entry.name, icon: '📦', path: fullPath });
-                } else if (entry.name === 'package-lock.json') {
-                    filesToScan.push({ name: entry.name, icon: '🔒', path: fullPath });
+                }
+                else if (entry.name === 'package-lock.json') {
+                  filesToScan.push({ name: entry.name, icon: '🔒', path: fullPath });
+                }
+                else if (entry.name === 'pnpm-lock.yaml') {
+                  filesToScan.push({ name: entry.name, icon: '🔒', path: fullPath });
                 }
             }
         }
@@ -656,10 +670,11 @@ async function main() {
     const args = process.argv.slice(2);
 
     if (args.length === 0) {
-        console.log('Usage: node shai_hulud_scanner.js <path_to_package.json|package-lock.json_or_directory>');
+    console.log('Usage: node shai_hulud_scanner.js <path_to_package.json|package-lock.json_or_directory|pnpm-lock.yaml_or_directory>');
         console.log('Examples:');
         console.log('  node shai_hulud_scanner.js ./package.json');
         console.log('  node shai_hulud_scanner.js ./package-lock.json');
+        console.log('  node shai_hulud_scanner.js ./pnpm-lock.yaml');
         console.log('  node shai_hulud_scanner.js ./my-project');
         console.log('  node shai_hulud_scanner.js .');
         process.exit(1);
@@ -670,7 +685,12 @@ async function main() {
     try {
         const stats = fs.statSync(targetPath);
 
-        if (stats.isFile() && (targetPath.endsWith('package.json') || targetPath.endsWith('package-lock.json'))) {
+    if (
+      stats.isFile() &&
+      (targetPath.endsWith('package.json') ||
+        targetPath.endsWith('package-lock.json') ||
+        targetPath.endsWith('pnpm-lock.yaml'))
+    ) {
             console.log(`🔍 Scanning file: ${targetPath}`);
             console.log('='.repeat(60));
 
