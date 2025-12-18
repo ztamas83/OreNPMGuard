@@ -11,6 +11,8 @@ import tempfile
 import shutil
 import json
 from pathlib import Path
+from unittest.mock import patch
+
 
 # Add parent directory to path to import scanner
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -216,11 +218,42 @@ jobs:
 class TestPackageDetection(unittest.TestCase):
     """Test package version detection."""
     
+    
+    
+    def setUpPackageListMock(self):
+        # Mock the download_affected_packages_yaml function
+        patcher = patch('shai_hulud_scanner.download_affected_packages_yaml')
+        self.mock_download = patcher.start()
+
+        import yaml
+        yaml_content = """
+affected_packages:
+- name: '@accordproject/concerto-analysis'
+  versions:
+  - '3.24.1'
+- name: 'asyncapi-preview'
+  versions:
+  - '1.0.1'
+  - '1.0.2'
+- name: '@ctrl/deluge'
+  versions:
+  - '7.2.1'
+  - '7.2.2'
+- name: 'zapier-platform-legacy-scripting-runner'
+  versions:
+  - '4.0.3'
+"""
+        self.mock_download.return_value = yaml.safe_load(yaml_content)
+
+        self.addCleanup(patcher.stop)
+
     def setUp(self):
         """Set up test fixtures."""
         self.test_dir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.test_dir)
-    
+        self.setUpPackageListMock()
+        
+
     def test_compromised_package_detection(self):
         """Test detection of compromised package versions."""
         # Use a known compromised package from the database
@@ -237,6 +270,36 @@ class TestPackageDetection(unittest.TestCase):
         self.assertGreater(len(exact_matches), 0, "Should detect compromised package")
         self.assertEqual(exact_matches[0]['name'], '@ctrl/deluge')
         self.assertEqual(exact_matches[0]['installed_version'], '7.2.2')
+
+    def test_compromised_package_detection_in_package_lock(self):
+        """Test detection of compromised package versions."""
+        # Use a known compromised package from the database
+
+        self.setUpPackageListMock()
+        fixture_path = Path(__file__).parent / 'fixtures' / 'package_lock_shai_hulud_2.json'
+        package_path = os.path.join(self.test_dir, "package-lock.json")
+        print(f"Copying package-lock.json to {package_path}")
+        shutil.copy(fixture_path, package_path)
+
+        exact_matches, potential_matches = scan_package_json(package_path)
+        self.assertGreater(len(exact_matches), 0, "Should detect compromised package")
+        self.assertEqual(exact_matches[0]['name'], '@accordproject/concerto-analysis')
+        self.assertEqual(exact_matches[0]['installed_version'], '3.24.1')
+    
+    def test_compromised_package_detection_in_pnpm_lock(self):
+        """Test detection of compromised package versions."""
+        # Use a known compromised package from the database
+
+        self.setUpPackageListMock()
+        fixture_path = Path(__file__).parent / 'fixtures' / 'pnpm_lock_shai_hulud_2.yaml'
+        package_path = os.path.join(self.test_dir, "pnpm-lock.yaml")
+        print(f"Copying pnpm-lock.yaml to {package_path}")
+        shutil.copy(fixture_path, package_path)
+
+        exact_matches, potential_matches = scan_package_json(package_path)
+        self.assertGreater(len(exact_matches), 0, "Should detect compromised package")
+        self.assertEqual(exact_matches[0]['name'], '@accordproject/concerto-analysis')
+        self.assertEqual(exact_matches[0]['installed_version'], '3.24.1')
     
     def test_potential_match_detection(self):
         """Test detection of packages with different versions."""
