@@ -775,4 +775,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { loadAffectedPackagesFromYaml, scanPackageJson, scanDirectory, scanForIocs };
+module.exports = { loadAffectedPackagesFromYaml, scanPackage, scanDirectory, scanForIocs };
