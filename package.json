@@ -15,7 +15,7 @@
     "install:python-deps": "pip install -r requirements.txt",
     "test": "./tests/run_tests.sh",
     "test:python": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
-    "test:nodejs": "node tests/test_nodejs_scanner.js",
+    "test:nodejs": "node --test tests/test_nodejs_scanner.js",
     "test:all": "npm run test:python && npm run test:nodejs",
     "validate": "node -e \"require('./shai_hulud_scanner.js')\" && echo 'JavaScript scanner syntax OK'",
     "validate:python": "python3 -m py_compile shai_hulud_scanner.py && echo 'Python scanner syntax OK'"

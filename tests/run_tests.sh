@@ -43,7 +43,7 @@ if command -v node &> /dev/null; then
     echo "🟢 Running Node.js Tests..."
     echo "----------------------------------------"
     cd "$(dirname "$0")/.."
-    if node tests/test_nodejs_scanner.js 2>&1 | tee /tmp/nodejs_tests.log; then
+    if node --test tests/test_nodejs_scanner.js 2>&1 | tee /tmp/nodejs_tests.log; then
         NODEJS_PASSED=1
         echo -e "${GREEN}✅ Node.js tests passed${NC}"
     else
@@ -57,7 +57,7 @@ else
 fi
 
 # Summary
-echo "=" | head -c 60 && echo ""
+echo "========================================"
 echo "📊 Test Summary:"
 echo "----------------------------------------"
 
